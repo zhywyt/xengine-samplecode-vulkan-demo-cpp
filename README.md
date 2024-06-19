@@ -71,7 +71,7 @@
 
 ## 约束与限制
 
-1. 本示例仅支持标准系统上运行，支持设备：支持Mate 60系列及以上的华为手机。
+1. 本示例仅支持标准系统上运行，支持设备：支持马良910 GPU及以上的华为手机。
 2. 本示例为Stage模型，支持API version 12。
 3. HarmonyOS系统：HarmonyOS NEXT Developer Beta1及以上。
 4. DevEco Studio版本：DevEco Studio NEXT Developer Beta1及以上。
