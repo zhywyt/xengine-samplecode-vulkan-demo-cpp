@@ -1395,6 +1395,7 @@ bool VulkanExample::prepare()
     if (!CheckXEngine()) {
         return false;
     }
+	camera.setPerspective(60.0f, (float)screenWidth / (float)screenHeight, m_zNear, m_zFar);
     LoadAssets();
     PrepareOffscreenFramebuffers();
     PrepareUniformBuffers();

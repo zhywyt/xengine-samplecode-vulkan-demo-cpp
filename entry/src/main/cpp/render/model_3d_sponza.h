@@ -36,7 +36,6 @@ public:
         camera.type = Camera::CameraType::firstperson;
         camera.position = { 0.0f, 1.0f, 0.0f };
         camera.setRotation(glm::vec3(0.0f, -90.0f, 0.0f));
-        camera.setPerspective(60.0f, (float)screenWidth / (float)screenHeight, m_zNear, m_zFar);
         
         enabledInstanceExtensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
         enabledDeviceExtensions.push_back(VK_KHR_CREATE_RENDERPASS_2_EXTENSION_NAME);
@@ -45,8 +44,7 @@ public:
 
     ~VulkanExample();
     
-    float m_zNear = 0.1f;
-    float m_zFar = 64.0f;
+
     glm::mat4 m_model = glm::mat4(1.0f);
     glm::vec3 m_lightDir = glm::vec3(0.0f, -1.0f, 0.0f);
     glm::mat4 m_lightSpaceMatrix = glm::mat4(1.0f);

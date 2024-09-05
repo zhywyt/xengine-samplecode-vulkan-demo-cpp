@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-import UIAbility from '@ohos.app.ability.UIAbility';
-import window from '@ohos.window';
-import hilog from '@ohos.hilog';
 import nativerender from 'libnativerender.so';
+import { hilog } from '@kit.PerformanceAnalysisKit';
+import { window } from '@kit.ArkUI';
+import { UIAbility } from '@kit.AbilityKit';
 
 export enum ContextType {
   APP_LIFECYCLE,
@@ -38,7 +38,6 @@ export default class EntryAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage) {
-    // Main window is created, set main page for this ability
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
     let windowClass = null;
     windowStage.getMainWindow((err, data) => {
@@ -51,7 +50,6 @@ export default class EntryAbility extends UIAbility {
       windowClass = data;
       console.info('Succeeded in obtaining the main window. Data: ' + JSON.stringify(data));
 
-      // 2.实现沉浸式效果：设置导航栏、状态栏不显示。
       let names = [];
       windowClass.setWindowSystemBarEnable(names, (err) => {
         if (err.code) {
@@ -64,10 +62,7 @@ export default class EntryAbility extends UIAbility {
       windowClass.setWindowLayoutFullScreen(true)
     })
 
-
     globalThis.abilityContext = this.context
-
-    //用全局对象获取context类的接口
     globalThis.context = this.context
     nativeAppLifecycle.onShow();
     windowStage.loadContent('pages/Index', (err, data) => {
@@ -80,18 +75,15 @@ export default class EntryAbility extends UIAbility {
   }
 
   onWindowStageDestroy() {
-    // Main window is destroyed, release UI related resources
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageDestroy');
     nativeAppLifecycle.onHide();
   }
 
   onForeground() {
-    // Ability has brought to foreground
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onForeground');
   }
 
   onBackground() {
-    // Ability has back to background
     hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onBackground');
   }
 };

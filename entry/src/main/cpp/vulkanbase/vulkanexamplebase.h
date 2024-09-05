@@ -140,6 +140,9 @@ public:
     bool viewUpdated = false;
     uint32_t screenWidth = 1280;
     uint32_t screenHeight = 720;
+    
+    float m_zNear = 0.1f;
+    float m_zFar = 64.0f;
     /** @brief Last frame time measured using a high performance timer (if available) */
 	float frameTimer = 1.0f;
 

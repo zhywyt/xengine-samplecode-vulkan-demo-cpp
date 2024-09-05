@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import hilog from '@ohos.hilog';
+
 import nativeRender from 'libnativerender.so';
-import { ContextType } from '../entryability/EntryAbility';
 import CommonConstants from '../common/CommonConstants';
+import { ContextType } from '../entryability/EntryAbility';
 
 const nativePageLifecycle: Record<string, () => void> =
   nativeRender.getContext(ContextType.PAGE_LIFECYCLE) as Record<string, () => void>;
@@ -24,7 +24,6 @@ const nativePageLifecycle: Record<string, () => void> =
 @Component
 struct Index {
   private xComponentContext: Record<string, (a: number | boolean | undefined) => void> = {};
-  private resmgr = getContext().resourceManager;
 
   aboutToAppear(): void {
     console.log('[LIFECYCLE-Index] aboutToAppear');
@@ -50,7 +49,7 @@ struct Index {
     Stack({ alignContent: Alignment.TopStart }) {
       XComponent({
         id: CommonConstants.XCOMPONENT_ID,
-        type: CommonConstants.XCOMPONENT_TYPE,
+        type: XComponentType.SURFACE,
         libraryname: CommonConstants.XCOMPONENT_LIBRARY_NAME
       })
         .onLoad((xComponentContext?: object| Record<string, (a: number | boolean |undefined) => void>) => {
@@ -62,7 +61,7 @@ struct Index {
 
       Row() {
         Column() {
-          Select([{ value: 'original resolution'},
+          Select([{ value: 'no upscale'},
             { value: 'spatial upscale'},
             { value: 'fsr upscale'}
           ])
