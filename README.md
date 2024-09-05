@@ -11,7 +11,7 @@
 ![XEngine Spatial Upscale](screenshots/device/XEngine_VULKAN_Spatial_Upscale_Example.jpg)
 
 ## 相关概念
-- [XComponent](https://developer.harmonyos.com/cn/docs/documentation/doc-references-V3/_o_h___native_x_component-0000001497210885-V3?catalogVersion=V3)：可用于媒体数据写入，并显示在XComponent组件。
+- [XComponent](https://developer.huawei.com/consumer/cn/doc/harmonyos-references-V5/ts-basic-components-xcomponent-V5)：可用于媒体数据写入，并显示在XComponent组件。
 
 ## 使用说明
 
