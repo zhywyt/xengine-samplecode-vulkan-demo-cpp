@@ -29,7 +29,7 @@
 │  │  │── napi_init.cpp          // native api层接口的具体实现函数
 │  │  │── CMakeLists.txt         // native层编译配置
 │  │  │── 3rdParty               // 三方件
-│  │  │── commom                 // 通用接口
+│  │  │── common                 // 通用接口
 │  │  │── file                   // 文件管理
 │  │  │── libs                   // 三方动态库
 │  │  │── manager                // native&arkts交互
