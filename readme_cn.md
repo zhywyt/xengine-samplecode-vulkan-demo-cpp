@@ -21,32 +21,38 @@
 
 ## 工程目录
 ```
-├── entry/src/main	         // 代码区
-│  ├── cpp
-│  │  ├── types
-│  │  │  ├── libnativerender
-             └── index.d.ts      // native层接口注册文件
-│  │  │── napi_init.cpp          // native api层接口的具体实现函数
-│  │  │── CMakeLists.txt         // native层编译配置
-│  │  │── 3rdParty               // 三方件
-│  │  │── common                 // 通用接口
-│  │  │── file                   // 文件管理
-│  │  │── libs                   // 三方动态库
-│  │  │── manager                // native&arkts交互
-│  │  │── render                 // 渲染
-│  │  │── vulkanbase             // vulkan基础能力封装
-│  ├── ets
-│  │  ├── entryability
-             └── EntryAbility.ts // 程序入口类
-│  │  ├── pages
-             └── index.ets       // 主界面展示类
-│  ├── resources                 // 资源文件目录
-│  │  ├── base
-│  │  │  ├── media
-             └── icon.png        // 图片资源
-│  │  ├── rawfile
-│  │  │  ├── Sponza
-             └── sponza.obj     // 模型资源
+├──entry/src/main	            // 代码区
+│  ├──cpp
+│  │  ├──types
+│  │  │  └──libnativerender
+│  │  │    	└──index.d.ts       // native层接口注册文件
+│  │  ├──napi_init.cpp          // native api层接口的具体实现函数
+│  │  ├──CMakeLists.txt         // native层编译配置
+│  │  ├──3rdParty               // 三方件
+│  │  ├──common                 // 通用接口
+│  │  ├──file                   // 文件管理
+│  │  ├──libs                   // 三方动态库
+│  │  ├──manager                // ArkTs与native接口绑定
+│  │  ├──render                 // 渲染
+│  │  └──vulkanbase             // vulkan基础能力封装
+│  ├──ets
+│  │  ├──common
+│  │  │  └──CommonConstants.ets // 通用常量
+│  │  ├──entryability
+│  │  │  └──EntryAbility.ts 	// 程序入口类
+│  │  ├──pages
+│  │  │  └──index.ets       	// 主界面展示类
+│  └──resources                 // 资源文件目录
+│     ├──base
+│     │  └──media
+│     │     └──icon.png        	// 图片资源
+│     └──rawfile
+│     	 └──shader              // 存放着色器
+│        └──Sponza
+│ 	        └──textures	        // 存放图片资源
+│ 	        └──copyright.txt    // 版权信息及使用许可
+│ 	        └──sponza.mtl       // 描述模型中使用的材质属性
+│           └──sponza.obj     	// 模型资源
 ```
 
 ## 具体实现

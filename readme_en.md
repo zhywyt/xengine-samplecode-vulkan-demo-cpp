@@ -21,32 +21,38 @@ You can tap the drop-down list box to switch between upscaling modes and tap the
 
 ## Project Directory
 ```
-├── entry/src/main	             // Code area
-│  ├── cpp
-│  │  ├── types
-│  │  │  ├── libnativerender
-             └── index.d.ts      // API registration file at the native layer
-│  │  │── napi_init.cpp          // Functions of APIs at the native layer
-│  │  │── CMakeLists.txt         // Compilation configurations at the native layer
-│  │  │── 3rdParty               // Third-party component
-│  │  │── common                 // Common APIs
-│  │  │── file                   // File management
-│  │  │── libs                   // Third-party dynamic libraries
-│  │  │── manager                // native & ArkTS interactions
-│  │  │── render                 // Rendering
-│  │  │── vulkanbase             // Encapsulated basic Vulkan capabilities
-│  ├── ets
-│  │  ├── entryability
-             └── EntryAbility.ts // Entry class
-│  │  ├── pages
-             └── index.ets       // Home screen display class
-│  ├── resources                 // Directory of resource files
-│  │  ├── base
-│  │  │  ├── media
-             └── icon.png        // Image resources
-│  │  ├── rawfile
-│  │  │  ├── Sponza
-             └── sponza.obj    // Model resources
+├──entry/src/main             	// Code area
+│  ├──cpp
+│  │  ├──types
+│  │  │  └──libnativerender
+│  │  │    	└──index.d.ts       // API registration file at the native layer
+│  │  ├──napi_init.cpp          // Functions of APIs at the native layer
+│  │  ├──CMakeLists.txt         // Compilation configurations at the native layer
+│  │  ├──3rdParty               // Third-party component
+│  │  ├──common                 // Common APIs
+│  │  ├──file                   // File management
+│  │  ├──libs                   // Third-party dynamic libraries
+│  │  ├──manager                // Binding ArkTs to Native Interfaces
+│  │  ├──render                 // Rendering
+│  │  └──vulkanbase             // Encapsulated basic Vulkan capabilities
+│  ├──ets
+│  │  ├──common
+│  │  │  └──CommonConstants.ets // Common constants
+│  │  ├──entryability
+│  │  │  └──EntryAbility.ts     // Entry class
+│  │  ├──pages
+│  │  │  └──index.ets           // Home screen display class
+│  └──resources                 // Directory of resource files
+│     ├──base
+│     │  └──media
+│     │     └──icon.png         // Image resources
+│     └──rawfile
+│     	 └──shader              // Stores shaders
+│        └──Sponza
+│ 	        └──textures		    // Stores image resources
+│ 	        └──copyright.txt    // Copyright information and usage license
+│ 	        └──sponza.mtl       // Describes material properties used in the model
+│           └──sponza.obj     	// Model resources
 ```
 
 ## Implementation Details
