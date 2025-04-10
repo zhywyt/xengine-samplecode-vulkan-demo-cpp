@@ -2,13 +2,13 @@
 
 ## Overview
 
-In this codelab, you'll learn how to use the GPU spatial upscaling API and AI temporal upscaling API of XEngine Kit to perform texture upscaling and enable adaptive VRS. The sample code takes drawing the scenes of Sponza Palace as an example, and builds up the Vulkan environment using XComponent. The demo project is created based on the Native C++ template.
+In this codelab, you'll learn how to use the GPU spatial upscaling API of XEngine Kit to perform texture upscaling and enable adaptive VRS. The sample code takes drawing the scenes of Sponza Palace as an example, and builds up the Vulkan environment using XComponent. The demo project is created based on the Native C++ template.
 
 ## Preview
 
 You can tap the drop-down list box to switch between upscaling modes and tap the check box to enable or disable adaptative VRS. The following figure shows the Sponza Palace scene drawn using XComponent.
 
-![XEngine Temporal Upscale](screenshots/device/XEngine_VULKAN_Temporal_Upscale_Example.png)
+![XEngine Spatial Upscale](screenshots/device/XEngine_VULKAN_Spatial_Upscale_Example.jpg)
 
 ## Related Concepts
 - [XComponent](https://developer.huawei.com/consumer/en/doc/harmonyos-references/ts-basic-components-xcomponent): The XComponent can accept and display media data input.
@@ -16,7 +16,7 @@ You can tap the drop-down list box to switch between upscaling modes and tap the
 ## Instructions
 
 1. Run the sample code.
-2. Tap the drop-down list box and switch between **no upscale** (no upscaling), **spatial upscale** (GPU spatial upscaling), **fsr upscale** (FSR1.0 upscaling) modes，and **temporal upscale**(AI temporal upscaling) modes.
+2. Tap the drop-down list box and switch between **no upscale** (no upscaling), **spatial upscale** (GPU spatial upscaling), and **fsr upscale** (FSR1.0 upscaling)  modes.
 3. Tap the check box to enable or disable adaptive VRS.
 
 ## Project Directory
@@ -58,9 +58,6 @@ The sample code uses the following APIs defined in XEngine Kit:
 * VKAPI_ATTR VkResult VKAPI_CALL HMS_XEG_CreateAdaptiveVRS(VkDevice device, XEG_AdaptiveVRSCreateInfo* pXegAdaptiveVRSCreateInfo, XEG_AdaptiveVRS* pXegAdaptiveVRS);
 * VKAPI_ATTR void VKAPI_CALL HMS_XEG_CmdDispatchAdaptiveVRS(VkCommandBuffer cmdBuffer, XEG_AdaptiveVRS xegAdaptiveVRS, XEG_AdaptiveVRSDescription* pXegAdaptiveVRSDescription);
 * VKAPI_ATTR void VKAPI_CALL HMS_XEG_DestroyAdaptiveVRS(XEG_AdaptiveVRS xegAdaptiveVRS);
-* VKAPI_ATTR VkResult VKAPI_CALL HMS_XEG_CreateTemporalUpscale(VkDevice device, XEG_TemporalUpscaleCreateInfo* pTemporalUpscaleInfo, XEG_TemporalUpscale* pTemporalUpscale);
-* VKAPI_ATTR void VKAPI_CALL HMS_XEG_CmdRenderTemporalUpscale(VkCommandBuffer commandBuffer, XEG_TemporalUpscale temporalUpscale, XEG_TemporalUpscaleDescription* pDescription);
-* VKAPI_ATTR void VKAPI_CALL HMS_XEG_DestroyTemporalUpscale(XEG_TemporalUpscale temporalUpscale);
 You can call the APIs listed above to implement upscaling and adaptative VRS.
 
 ## Required Permissions

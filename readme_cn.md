@@ -2,13 +2,13 @@
 
 ## 简介
 
-本篇Codelab主要介绍如何使用XEngine空域GPU超分API、时域AI超分API进行纹理的超分以及开启自适应可变速率着色，通过XComponent组件创建Vulkan环境，实现绘制SPONZA场景。本篇CodeLab使用Native C++模板创建。
+本篇Codelab主要介绍如何使用XEngine空域GPU超分API进行纹理的超分以及开启自适应可变速率着色，通过XComponent组件创建Vulkan环境，实现绘制SPONZA场景。本篇CodeLab使用Native C++模板创建。
 
 ## 效果预览
 
 如图所示，XComponent组件绘制SPONZA场景，点击超分下拉选择菜单，切换超分模式，点击勾选框选择是否开启自适应可变速率着色
 
-![XEngine Temporal Upscale](screenshots/device/XEngine_VULKAN_Temporal_Upscale_Example.png)
+![XEngine Spatial Upscale](screenshots/device/XEngine_VULKAN_Spatial_Upscale_Example.jpg)
 
 ## 相关概念
 - [XComponent](https://developer.huawei.com/consumer/cn/doc/harmonyos-references/ts-basic-components-xcomponent)：可用于媒体数据写入，并显示在XComponent组件。
@@ -16,7 +16,7 @@
 ## 使用说明
 
 1. 运行示例代码。
-2. 点击下拉选择菜单，在no upscale（不使用超分）、spatial upscale（空域GPU超分）、fsr upscale（FSR1.0超分）、temporal upscale（时域AI超分）四种模式间进行切换。
+2. 点击下拉选择菜单，在no upscale（不使用超分）、spatial upscale（空域GPU超分）、fsr upscale（FSR1.0超分）三种模式间进行切换。
 3. 点击勾选框，可以开启/关闭自适应可变速率着色。
 
 ## 工程目录
@@ -58,9 +58,6 @@
 * VKAPI_ATTR VkResult VKAPI_CALL HMS_XEG_CreateAdaptiveVRS(VkDevice device, XEG_AdaptiveVRSCreateInfo* pXegAdaptiveVRSCreateInfo, XEG_AdaptiveVRS* pXegAdaptiveVRS);
 * VKAPI_ATTR void VKAPI_CALL HMS_XEG_CmdDispatchAdaptiveVRS(VkCommandBuffer cmdBuffer, XEG_AdaptiveVRS xegAdaptiveVRS, XEG_AdaptiveVRSDescription* pXegAdaptiveVRSDescription);
 * VKAPI_ATTR void VKAPI_CALL HMS_XEG_DestroyAdaptiveVRS(XEG_AdaptiveVRS xegAdaptiveVRS);
-* VKAPI_ATTR VkResult VKAPI_CALL HMS_XEG_CreateTemporalUpscale(VkDevice device, XEG_TemporalUpscaleCreateInfo* pTemporalUpscaleInfo, XEG_TemporalUpscale* pTemporalUpscale);
-* VKAPI_ATTR void VKAPI_CALL HMS_XEG_CmdRenderTemporalUpscale(VkCommandBuffer commandBuffer, XEG_TemporalUpscale temporalUpscale, XEG_TemporalUpscaleDescription* pDescription);
-* VKAPI_ATTR void VKAPI_CALL HMS_XEG_DestroyTemporalUpscale(XEG_TemporalUpscale temporalUpscale);
 通过调用展示的API实现超分功能以及自适应可变速率着色功能。
 
 ## 相关权限
