@@ -811,8 +811,9 @@ void VulkanExample::BuildUpscaleCommandBuffers()
         vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
         vkCmdEndRenderPass(drawCmdBuffers[i]);
 
-        // Skip upscaling when shading rate visualization is enabled to preserve the shading rate image
+        // Handle upscaling and visualization
         if (!visualize_shading_rate) {
+            // Normal upscaling path
             if (use_method == 1) {
                 LOGI("VulkanExample example use spatial upscale.");
                 XEG_SpatialUpscaleDescription xegDescription{0};
@@ -824,7 +825,9 @@ void VulkanExample::BuildUpscaleCommandBuffers()
                 fsr->Render(drawCmdBuffers[i]);
             }
         } else {
-            LOGI("VulkanExample skipping upscale for shading rate visualization");
+            LOGI("VulkanExample skipping upscale for shading rate visualization - will display light buffer directly");
+            // When visualization is enabled, skip upscaling entirely
+            // The final swap will use the light buffer instead of upscale buffer (handled in descriptor set)
         }
 
         clearValues[0].color = defaultClearColor;
@@ -1021,8 +1024,20 @@ void VulkanExample::SetupDescriptors()
         if (upscaleDescriptorSets.swapUpscale == VK_NULL_HANDLE) {
             VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &descriptorAllocInfo, &upscaleDescriptorSets.swapUpscale));
         }
+        
+        // Choose input image based on visualization state
+        VkImageView inputImageView;
+        if (visualize_shading_rate) {
+            // When visualizing, show the low-res light buffer (where VRS is applied)
+            inputImageView = upscaleFrameBuffers.light.color.view;
+            LOGI("VulkanExample SetupDescriptors: Using light buffer for visualization");
+        } else {
+            // Normal path: show the upscaled image
+            inputImageView = upscaleFrameBuffers.upscale.color.view;
+        }
+        
         imageDescriptors = {
-            vks::initializers::descriptorImageInfo(colorSampler, upscaleFrameBuffers.upscale.color.view,
+            vks::initializers::descriptorImageInfo(colorSampler, inputImageView,
                                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
         };
 
@@ -1319,16 +1334,9 @@ void VulkanExample::DispatchVRS(bool upscale, VkCommandBuffer commandBuffer)
     xeg_description.inputDepthImage =
         upscale ? upscaleFrameBuffers.gBufferLight.depth.view : frameBuffers.gBufferLight.depth.view;
     
-    // Set outputShadingRateImage based on visualization toggle
-    if (visualize_shading_rate && upscale) {
-        // When visualization is enabled, output shading rate image to the final screen image
-        xeg_description.outputShadingRateImage = upscaleFrameBuffers.upscale.color.view;
-        LOGI("VulkanExample DispatchVRS: Outputting shading rate to final screen image for visualization");
-    } else {
-        // Normal rendering: output to shading rate image
-        xeg_description.outputShadingRateImage =
-            upscale ? upscaleFrameBuffers.shadingRate.color.view : frameBuffers.shadingRate.color.view;
-    }
+    // Always output to the proper shading rate image buffer
+    xeg_description.outputShadingRateImage =
+        upscale ? upscaleFrameBuffers.shadingRate.color.view : frameBuffers.shadingRate.color.view;
     
     if (use_reprojectionMatrix) {
         if (camera.curVP.perspective == glm::mat4(0)) {
