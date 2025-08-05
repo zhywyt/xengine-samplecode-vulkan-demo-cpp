@@ -258,8 +258,9 @@ public:
             return;
         }
         if (cur_method != use_method || cur_vrs != use_vrs || cur_visualize_shading_rate != visualize_shading_rate) {
+            SetupDescriptors();  // Update descriptor sets first to reflect new image bindings
             buildCommandBuffers();
-            LOGI("VulkanExample rebuild command buffers");
+            LOGI("VulkanExample rebuild command buffers and descriptor sets");
             cur_method = use_method;
             cur_vrs = use_vrs;
             cur_visualize_shading_rate = visualize_shading_rate;
