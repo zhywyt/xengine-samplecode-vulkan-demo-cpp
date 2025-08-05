@@ -811,15 +811,20 @@ void VulkanExample::BuildUpscaleCommandBuffers()
         vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
         vkCmdEndRenderPass(drawCmdBuffers[i]);
 
-        if (use_method == 1) {
-            LOGI("VulkanExample example use spatial upscale.");
-            XEG_SpatialUpscaleDescription xegDescription{0};
-            xegDescription.inputImage = upscaleFrameBuffers.light.color.view;
-            xegDescription.outputImage = upscaleFrameBuffers.upscale.color.view;
-            HMS_XEG_CmdRenderSpatialUpscale(drawCmdBuffers[i], xegSpatialUpscale, &xegDescription);
+        // Skip upscaling when shading rate visualization is enabled to preserve the shading rate image
+        if (!visualize_shading_rate) {
+            if (use_method == 1) {
+                LOGI("VulkanExample example use spatial upscale.");
+                XEG_SpatialUpscaleDescription xegDescription{0};
+                xegDescription.inputImage = upscaleFrameBuffers.light.color.view;
+                xegDescription.outputImage = upscaleFrameBuffers.upscale.color.view;
+                HMS_XEG_CmdRenderSpatialUpscale(drawCmdBuffers[i], xegSpatialUpscale, &xegDescription);
+            } else {
+                LOGI("VulkanExample example use fsr upscale.");
+                fsr->Render(drawCmdBuffers[i]);
+            }
         } else {
-            LOGI("VulkanExample example use fsr upscale.");
-            fsr->Render(drawCmdBuffers[i]);
+            LOGI("VulkanExample skipping upscale for shading rate visualization");
         }
 
         clearValues[0].color = defaultClearColor;

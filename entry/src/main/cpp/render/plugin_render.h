@@ -31,6 +31,7 @@ public:
     static void Release(std::string &id);
     static napi_value SetUpscaleMethod(napi_env env, napi_callback_info info);
     static napi_value SetVRSUsed(napi_env env, napi_callback_info info);
+    static napi_value SetShadingRateVisualization(napi_env env, napi_callback_info info);
     static std::unordered_map<std::string, PluginRender *> m_instance;
     static OH_NativeXComponent_Callback m_callback;
     static std::mutex m_mutex;
