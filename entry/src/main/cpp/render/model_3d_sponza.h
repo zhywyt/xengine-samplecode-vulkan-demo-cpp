@@ -56,6 +56,8 @@ public:
     bool use_vrs = false;
     bool cur_vrs = false;
     bool use_reprojectionMatrix = true;
+    bool visualize_shading_rate = false;
+    bool cur_visualize_shading_rate = false;
     
     void UseVRS(bool useVRS)
     {
@@ -67,6 +69,12 @@ public:
     {
         use_method = method;
         LOGI("VulkanExample curr set method: %{public}d", use_method);
+    }
+    
+    void SetVisualizeShadingRate(bool visualize)
+    {
+        visualize_shading_rate = visualize;
+        LOGI("VulkanExample curr set visualize shading rate: %{public}d", visualize_shading_rate);
     }
 
     FSR *fsr;
@@ -249,11 +257,12 @@ public:
         if (!prepared) {
             return;
         }
-        if (cur_method != use_method || cur_vrs != use_vrs) {
+        if (cur_method != use_method || cur_vrs != use_vrs || cur_visualize_shading_rate != visualize_shading_rate) {
             buildCommandBuffers();
             LOGI("VulkanExample rebuild command buffers");
             cur_method = use_method;
             cur_vrs = use_vrs;
+            cur_visualize_shading_rate = visualize_shading_rate;
         }
 
         Draw();

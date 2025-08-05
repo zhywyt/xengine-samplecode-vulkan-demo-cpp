@@ -1313,8 +1313,18 @@ void VulkanExample::DispatchVRS(bool upscale, VkCommandBuffer commandBuffer)
     xeg_description.inputColorImage = upscale ? upscaleFrameBuffers.light.color.view : frameBuffers.light.color.view;
     xeg_description.inputDepthImage =
         upscale ? upscaleFrameBuffers.gBufferLight.depth.view : frameBuffers.gBufferLight.depth.view;
-    xeg_description.outputShadingRateImage =
-        upscale ? upscaleFrameBuffers.shadingRate.color.view : frameBuffers.shadingRate.color.view;
+    
+    // Set outputShadingRateImage based on visualization toggle
+    if (visualize_shading_rate && upscale) {
+        // When visualization is enabled, output shading rate image to the final screen image
+        xeg_description.outputShadingRateImage = upscaleFrameBuffers.upscale.color.view;
+        LOGI("VulkanExample DispatchVRS: Outputting shading rate to final screen image for visualization");
+    } else {
+        // Normal rendering: output to shading rate image
+        xeg_description.outputShadingRateImage =
+            upscale ? upscaleFrameBuffers.shadingRate.color.view : frameBuffers.shadingRate.color.view;
+    }
+    
     if (use_reprojectionMatrix) {
         if (camera.curVP.perspective == glm::mat4(0)) {
             xeg_description.reprojectionMatrix = (float *)glm::value_ptr(glm::mat4(0));
