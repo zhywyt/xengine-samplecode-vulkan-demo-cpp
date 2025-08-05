@@ -770,57 +770,53 @@ void VulkanExample::buildCommandBuffers()
             LOGI("VulkanExample do not use vrs.");
         }
 
-        // When visualizing shading rate, create visible visualization data
+        // When visualizing shading rate, create visible visualization data and skip light pass
         if (visualize_shading_rate && use_vrs) {
-            LOGI("VulkanExample visualization enabled - creating visible shading rate data");
+            LOGI("VulkanExample visualization enabled - creating visible shading rate data, skipping light pass");
             CreateShadingRateVisualizationBuffer(false, drawCmdBuffers[i]);
-        }
-
-        // Second Pass: Light Pass, Support VRS
-        clearValues[0].color = defaultClearColor;
-        clearValues[1].depthStencil = {1.0f, 0};
-
-        renderPassBeginInfo.renderPass = frameBuffers.shadingRate.renderPass;
-        renderPassBeginInfo.framebuffer = frameBuffers.shadingRate.frameBuffer;
-        renderPassBeginInfo.renderArea.extent.width = frameBuffers.shadingRate.width;
-        renderPassBeginInfo.renderArea.extent.height = frameBuffers.shadingRate.height;
-        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassBeginInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        if (use_vrs && !visualize_shading_rate) {
-            // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
-            // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
-            combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-            // Combiner for pipeline (A) and attachment (B), replace the pipeline default value (fragment_size) with the
-            // fragment sizes stored in the attachment
-            combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
         } else {
-            // If shading rate from attachment is disabled, we keep the value set via the dynamic state
-            // Also disable VRS when visualizing to show the difference
-            combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-            combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-        }
-        vkCmdSetFragmentShadingRateKHR(drawCmdBuffers[i], &fragmentSize, combinerOps);
+            // Second Pass: Light Pass, Support VRS (only when not visualizing)
+            clearValues[0].color = defaultClearColor;
+            clearValues[1].depthStencil = {1.0f, 0};
 
-        viewport =
-            vks::initializers::viewport((float)frameBuffers.light.width, (float)frameBuffers.light.height, 0.0f, 1.0f);
-        vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
-        scissor = vks::initializers::rect2D(frameBuffers.light.width, frameBuffers.light.height, 0, 0);
-        vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
-        vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.light, 0, 1,
-                                &descriptorSets.light, 0, nullptr);
-        vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.light);
-        vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
-        vkCmdEndRenderPass(drawCmdBuffers[i]);
+            renderPassBeginInfo.renderPass = frameBuffers.shadingRate.renderPass;
+            renderPassBeginInfo.framebuffer = frameBuffers.shadingRate.frameBuffer;
+            renderPassBeginInfo.renderArea.extent.width = frameBuffers.shadingRate.width;
+            renderPassBeginInfo.renderArea.extent.height = frameBuffers.shadingRate.height;
+            renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+            renderPassBeginInfo.pClearValues = clearValues.data();
+
+            vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            if (use_vrs) {
+                // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
+                // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
+                combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+                // Combiner for pipeline (A) and attachment (B), replace the pipeline default value (fragment_size) with the
+                // fragment sizes stored in the attachment
+                combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+            } else {
+                // If shading rate from attachment is disabled, we keep the value set via the dynamic state
+                combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+                combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+            }
+            vkCmdSetFragmentShadingRateKHR(drawCmdBuffers[i], &fragmentSize, combinerOps);
+
+            viewport =
+                vks::initializers::viewport((float)frameBuffers.light.width, (float)frameBuffers.light.height, 0.0f, 1.0f);
+            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
+            scissor = vks::initializers::rect2D(frameBuffers.light.width, frameBuffers.light.height, 0, 0);
+            vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
+            vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.light, 0, 1,
+                                    &descriptorSets.light, 0, nullptr);
+            vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.light);
+            vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
+            vkCmdEndRenderPass(drawCmdBuffers[i]);
+        }
 
         // Final Pass: To Full Screen
         clearValues[0].color = defaultClearColor;
         clearValues[1].depthStencil = {1.0f, 0};
-        VkRenderPassBeginInfo renderPassBeginInfo = vks::initializers::renderPassBeginInfo();
-        VkViewport viewport;
-        VkRect2D scissor;
         renderPassBeginInfo.renderPass = renderPass;
         renderPassBeginInfo.framebuffer = VulkanExampleBase::frameBuffers[i];
         renderPassBeginInfo.renderArea.extent.width = screenWidth;
@@ -893,49 +889,49 @@ void VulkanExample::BuildUpscaleCommandBuffers()
             LOGI("VulkanExample not use vrs");
         }
         
-        // When visualizing shading rate, create visible visualization data for upscale path
+        // When visualizing shading rate, create visible visualization data and skip light pass
         if (visualize_shading_rate && use_vrs) {
-            LOGI("VulkanExample visualization enabled - creating visible shading rate data for upscale path");
+            LOGI("VulkanExample visualization enabled - creating visible shading rate data for upscale path, skipping light pass");
             CreateShadingRateVisualizationBuffer(true, drawCmdBuffers[i]);
-        }
-        
-        // Second Pass: Light Pass, Support VRS
-        clearValues[0].color = defaultClearColor;
-        clearValues[1].depthStencil = {1.0f, 0};
-
-        renderPassBeginInfo.renderPass = upscaleFrameBuffers.shadingRate.renderPass;
-        renderPassBeginInfo.framebuffer = upscaleFrameBuffers.shadingRate.frameBuffer;
-        renderPassBeginInfo.renderArea.extent.width = upscaleFrameBuffers.shadingRate.width;
-        renderPassBeginInfo.renderArea.extent.height = upscaleFrameBuffers.shadingRate.height;
-        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassBeginInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        if (use_vrs) {
-            // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
-            // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
-            combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-            // Combiner for pipeline (A) and attachment (B), replace the pipeline default value (fragment_size) with the
-            // fragment sizes stored in the attachment
-            combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
         } else {
-            // If shading rate from attachment is disabled, we keep the value set via the dynamic state
-            combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-            combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+            // Second Pass: Light Pass, Support VRS (only when not visualizing)
+            clearValues[0].color = defaultClearColor;
+            clearValues[1].depthStencil = {1.0f, 0};
+
+            renderPassBeginInfo.renderPass = upscaleFrameBuffers.shadingRate.renderPass;
+            renderPassBeginInfo.framebuffer = upscaleFrameBuffers.shadingRate.frameBuffer;
+            renderPassBeginInfo.renderArea.extent.width = upscaleFrameBuffers.shadingRate.width;
+            renderPassBeginInfo.renderArea.extent.height = upscaleFrameBuffers.shadingRate.height;
+            renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+            renderPassBeginInfo.pClearValues = clearValues.data();
+
+            vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+            if (use_vrs) {
+                // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
+                // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
+                combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+                // Combiner for pipeline (A) and attachment (B), replace the pipeline default value (fragment_size) with the
+                // fragment sizes stored in the attachment
+                combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+            } else {
+                // If shading rate from attachment is disabled, we keep the value set via the dynamic state
+                combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+                combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+            }
+
+            vkCmdSetFragmentShadingRateKHR(drawCmdBuffers[i], &fragmentSize, combinerOps);
+            viewport = vks::initializers::viewport((float)upscaleFrameBuffers.light.width,
+                                                   (float)upscaleFrameBuffers.light.height, 0.0f, 1.0f);
+            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
+            scissor = vks::initializers::rect2D(upscaleFrameBuffers.light.width, upscaleFrameBuffers.light.height, 0, 0);
+            vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
+
+            vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.light, 0, 1,
+                                    &upscaleDescriptorSets.light, 0, nullptr);
+            vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, upscalePipelines.light);
+            vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
+            vkCmdEndRenderPass(drawCmdBuffers[i]);
         }
-
-        vkCmdSetFragmentShadingRateKHR(drawCmdBuffers[i], &fragmentSize, combinerOps);
-        viewport = vks::initializers::viewport((float)upscaleFrameBuffers.light.width,
-                                               (float)upscaleFrameBuffers.light.height, 0.0f, 1.0f);
-        vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
-        scissor = vks::initializers::rect2D(upscaleFrameBuffers.light.width, upscaleFrameBuffers.light.height, 0, 0);
-        vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
-
-        vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.light, 0, 1,
-                                &upscaleDescriptorSets.light, 0, nullptr);
-        vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, upscalePipelines.light);
-        vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
-        vkCmdEndRenderPass(drawCmdBuffers[i]);
 
         // Handle upscaling and visualization
         if (!visualize_shading_rate) {
