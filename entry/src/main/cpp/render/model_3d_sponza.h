@@ -269,6 +269,11 @@ public:
         Draw();
         if (camera.updated) {
             UpdateUniformBufferMatrices();
+            // When visualizing shading rate, rebuild command buffers to update the scene with new camera view
+            if (visualize_shading_rate && use_vrs) {
+                buildCommandBuffers();
+                LOGI("VulkanExample rebuild command buffers for shading rate visualization with camera update");
+            }
         }
     }
 
