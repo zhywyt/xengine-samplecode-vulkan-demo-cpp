@@ -657,6 +657,11 @@ void VulkanExample::buildCommandBuffers()
             LOGI("VulkanExample do not use vrs.");
         }
 
+        // When visualizing shading rate, add a debug message
+        if (visualize_shading_rate) {
+            LOGI("VulkanExample visualization enabled - VRS effects disabled for comparison");
+        }
+
         // Second Pass: Light Pass, Support VRS
         clearValues[0].color = defaultClearColor;
         clearValues[1].depthStencil = {1.0f, 0};
@@ -670,7 +675,7 @@ void VulkanExample::buildCommandBuffers()
 
         vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-        if (use_vrs) {
+        if (use_vrs && !visualize_shading_rate) {
             // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
             // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
             combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
@@ -679,6 +684,7 @@ void VulkanExample::buildCommandBuffers()
             combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
         } else {
             // If shading rate from attachment is disabled, we keep the value set via the dynamic state
+            // Also disable VRS when visualizing to show the difference
             combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
             combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
         }
@@ -1334,7 +1340,8 @@ void VulkanExample::DispatchVRS(bool upscale, VkCommandBuffer commandBuffer)
     xeg_description.inputDepthImage =
         upscale ? upscaleFrameBuffers.gBufferLight.depth.view : frameBuffers.gBufferLight.depth.view;
     
-    // Always output to the proper shading rate image buffer
+    // When visualization is enabled, we want to output a colored representation of shading rates
+    // For now, use the proper shading rate image buffer (the XEG library should handle this)
     xeg_description.outputShadingRateImage =
         upscale ? upscaleFrameBuffers.shadingRate.color.view : frameBuffers.shadingRate.color.view;
     
