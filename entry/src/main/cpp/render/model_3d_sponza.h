@@ -287,6 +287,7 @@ private:
     void InitXEGVRS();
     void DispatchVRS(bool upscale, VkCommandBuffer commandBuffer);
     void PrepareShadingRateImage(uint32_t sriWidth, uint32_t sriHeight, FrameBufferAttachment *attachment);
+    void CreateShadingRateVisualizationBuffer(bool upscale, VkCommandBuffer commandBuffer);
     void CreateAttachment(VkFormat format, VkImageUsageFlagBits usage,
         FrameBufferAttachment *attachment, uint32_t width, uint32_t height);
     void PrepareOffscreenFramebuffers();
