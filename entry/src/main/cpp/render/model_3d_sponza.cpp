@@ -659,7 +659,7 @@ void VulkanExample::buildCommandBuffers()
 
         // When visualizing shading rate, add a debug message
         if (visualize_shading_rate) {
-            LOGI("VulkanExample visualization enabled - VRS effects disabled for comparison");
+            LOGI("VulkanExample visualization enabled - will show shading rate image data");
         }
 
         // Second Pass: Light Pass, Support VRS
@@ -1012,8 +1012,20 @@ void VulkanExample::SetupDescriptors()
             VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &descriptorAllocInfo, &descriptorSets.swap));
         }
 
+        // Choose input image based on visualization state for non-upscale path
+        VkImageView inputImageView;
+        if (visualize_shading_rate && use_vrs) {
+            // When visualizing, try to show the shading rate image (contains unsigned integer shading rate values)
+            // This may not display perfect colors but should show different values for different shading rates
+            inputImageView = frameBuffers.shadingRate.color.view;
+            LOGI("VulkanExample SetupDescriptors: Using shading rate image for visualization (non-upscale)");
+        } else {
+            // Normal path: show the light buffer
+            inputImageView = frameBuffers.light.color.view;
+        }
+
         imageDescriptors = {
-            vks::initializers::descriptorImageInfo(colorSampler, frameBuffers.light.color.view,
+            vks::initializers::descriptorImageInfo(colorSampler, inputImageView,
                                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
         };
 
