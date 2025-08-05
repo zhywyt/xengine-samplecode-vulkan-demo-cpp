@@ -92,7 +92,22 @@ struct Index {
           Text('useVRS')
         }
 
-      }.height('10%').width('60%')
+        Column() {
+          Checkbox({name: 'checkbox2',  group: 'checkboxGroup'})
+            .height(20)
+            .width(20)
+            .select(false)
+            .selectedColor(0x39a2db)
+            .onChange((value: boolean) => {
+              if (this.xComponentContext) {
+                this.xComponentContext.setShadingRateVisualization(value);
+              }
+              console.info('Checkbox2 change is'+ value)
+            })
+          Text('Visualize Shading Rate')
+        }
+
+      }.height('10%').width('80%')
 
     }.width('100%').height('100%').align(Alignment.TopStart)
   }

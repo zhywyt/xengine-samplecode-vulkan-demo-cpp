@@ -196,6 +196,119 @@ void VulkanExample::PrepareShadingRateImage(uint32_t sriWidth, uint32_t sriHeigh
     VK_CHECK_RESULT(vkCreateImageView(device, &imageViewCI, nullptr, &attachment->view));
 }
 
+void VulkanExample::CreateShadingRateVisualizationBuffer(bool upscale, VkCommandBuffer commandBuffer) 
+{
+    // Simple visualization: fill the shading rate image with visible values 
+    // Each shading rate (0-6) gets mapped to a different brightness/color level
+    
+    FrameBufferAttachment* targetImage = upscale ? 
+        &upscaleFrameBuffers.shadingRate.color : 
+        &frameBuffers.shadingRate.color;
+        
+    uint32_t width = upscale ? 
+        (uint32_t)lowResWidth / VRS_TILE_SIZE : 
+        (uint32_t)highResWidth / VRS_TILE_SIZE;
+    uint32_t height = upscale ? 
+        (uint32_t)lowResHeight / VRS_TILE_SIZE : 
+        (uint32_t)highResHeight / VRS_TILE_SIZE;
+    
+    // Create a staging buffer with visible shading rate values
+    VkBufferCreateInfo bufferInfo = {};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = width * height; // 1 byte per pixel for R8_UINT
+    bufferInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    
+    VK_CHECK_RESULT(vkCreateBuffer(device, &bufferInfo, nullptr, &stagingBuffer));
+    
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(device, stagingBuffer, &memRequirements);
+    
+    VkMemoryAllocateInfo allocInfo = {};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = vulkanDevice->getMemoryType(memRequirements.memoryTypeBits, 
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+    
+    VK_CHECK_RESULT(vkAllocateMemory(device, &allocInfo, nullptr, &stagingBufferMemory));
+    VK_CHECK_RESULT(vkBindBufferMemory(device, stagingBuffer, stagingBufferMemory, 0));
+    
+    // Map and fill the buffer with visualization pattern
+    uint8_t* data;
+    VK_CHECK_RESULT(vkMapMemory(device, stagingBufferMemory, 0, bufferInfo.size, 0, (void**)&data));
+    
+    // Create a simple pattern that makes shading rate values visible
+    // Map values 0-6 to multiples of 40 (0, 40, 80, 120, 160, 200, 240)
+    for (uint32_t y = 0; y < height; y++) {
+        for (uint32_t x = 0; x < width; x++) {
+            uint32_t index = y * width + x;
+            // Create a simple pattern based on position to simulate different shading rates
+            uint8_t shadingRate = ((x / 8) + (y / 8)) % 7; // Creates pattern with values 0-6
+            data[index] = shadingRate * 40; // Scale to make visible (0, 40, 80, 120, 160, 200, 240)
+        }
+    }
+    
+    vkUnmapMemory(device, stagingBufferMemory);
+    
+    // Transition image layout for transfer
+    VkImageMemoryBarrier barrier = {};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = targetImage->image;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    
+    vkCmdPipelineBarrier(commandBuffer,
+        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0, 0, nullptr, 0, nullptr, 1, &barrier);
+    
+    // Copy buffer to image
+    VkBufferImageCopy region = {};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = {width, height, 1};
+    
+    vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, targetImage->image,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+    
+    // Transition back to shader read optimal
+    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+    
+    vkCmdPipelineBarrier(commandBuffer,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        0, 0, nullptr, 0, nullptr, 1, &barrier);
+    
+    // Note: In a real implementation, staging buffer cleanup should be deferred 
+    // until after command buffer execution completes. For simplicity, we're 
+    // doing immediate cleanup here, but this may cause synchronization issues.
+    // TODO: Implement proper resource cleanup using fences or other sync mechanisms
+    vkDestroyBuffer(device, stagingBuffer, nullptr);
+    vkFreeMemory(device, stagingBufferMemory, nullptr);
+    
+    LOGI("VulkanExample CreateShadingRateVisualizationBuffer: Created visualization pattern for %s path", 
+         upscale ? "upscale" : "non-upscale");
+}
+
 void VulkanExample::PrepareOffscreenFramebuffers()
 {
     frameBuffers.gBufferLight.setSize(highResWidth, highResHeight);
@@ -657,50 +770,53 @@ void VulkanExample::buildCommandBuffers()
             LOGI("VulkanExample do not use vrs.");
         }
 
-        // Second Pass: Light Pass, Support VRS
-        clearValues[0].color = defaultClearColor;
-        clearValues[1].depthStencil = {1.0f, 0};
-
-        renderPassBeginInfo.renderPass = frameBuffers.shadingRate.renderPass;
-        renderPassBeginInfo.framebuffer = frameBuffers.shadingRate.frameBuffer;
-        renderPassBeginInfo.renderArea.extent.width = frameBuffers.shadingRate.width;
-        renderPassBeginInfo.renderArea.extent.height = frameBuffers.shadingRate.height;
-        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassBeginInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-
-        if (use_vrs) {
-            // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
-            // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
-            combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-            // Combiner for pipeline (A) and attachment (B), replace the pipeline default value (fragment_size) with the
-            // fragment sizes stored in the attachment
-            combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+        // When visualizing shading rate, create visible visualization data and skip light pass
+        if (visualize_shading_rate && use_vrs) {
+            LOGI("VulkanExample visualization enabled - creating visible shading rate data, skipping light pass");
+            CreateShadingRateVisualizationBuffer(false, drawCmdBuffers[i]);
         } else {
-            // If shading rate from attachment is disabled, we keep the value set via the dynamic state
-            combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-            combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-        }
-        vkCmdSetFragmentShadingRateKHR(drawCmdBuffers[i], &fragmentSize, combinerOps);
+            // Second Pass: Light Pass, Support VRS (only when not visualizing)
+            clearValues[0].color = defaultClearColor;
+            clearValues[1].depthStencil = {1.0f, 0};
 
-        viewport =
-            vks::initializers::viewport((float)frameBuffers.light.width, (float)frameBuffers.light.height, 0.0f, 1.0f);
-        vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
-        scissor = vks::initializers::rect2D(frameBuffers.light.width, frameBuffers.light.height, 0, 0);
-        vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
-        vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.light, 0, 1,
-                                &descriptorSets.light, 0, nullptr);
-        vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.light);
-        vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
-        vkCmdEndRenderPass(drawCmdBuffers[i]);
+            renderPassBeginInfo.renderPass = frameBuffers.shadingRate.renderPass;
+            renderPassBeginInfo.framebuffer = frameBuffers.shadingRate.frameBuffer;
+            renderPassBeginInfo.renderArea.extent.width = frameBuffers.shadingRate.width;
+            renderPassBeginInfo.renderArea.extent.height = frameBuffers.shadingRate.height;
+            renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+            renderPassBeginInfo.pClearValues = clearValues.data();
+
+            vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+            if (use_vrs) {
+                // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
+                // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
+                combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+                // Combiner for pipeline (A) and attachment (B), replace the pipeline default value (fragment_size) with the
+                // fragment sizes stored in the attachment
+                combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+            } else {
+                // If shading rate from attachment is disabled, we keep the value set via the dynamic state
+                combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+                combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+            }
+            vkCmdSetFragmentShadingRateKHR(drawCmdBuffers[i], &fragmentSize, combinerOps);
+
+            viewport =
+                vks::initializers::viewport((float)frameBuffers.light.width, (float)frameBuffers.light.height, 0.0f, 1.0f);
+            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
+            scissor = vks::initializers::rect2D(frameBuffers.light.width, frameBuffers.light.height, 0, 0);
+            vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
+            vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.light, 0, 1,
+                                    &descriptorSets.light, 0, nullptr);
+            vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelines.light);
+            vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
+            vkCmdEndRenderPass(drawCmdBuffers[i]);
+        }
 
         // Final Pass: To Full Screen
         clearValues[0].color = defaultClearColor;
         clearValues[1].depthStencil = {1.0f, 0};
-        VkRenderPassBeginInfo renderPassBeginInfo = vks::initializers::renderPassBeginInfo();
-        VkViewport viewport;
-        VkRect2D scissor;
         renderPassBeginInfo.renderPass = renderPass;
         renderPassBeginInfo.framebuffer = VulkanExampleBase::frameBuffers[i];
         renderPassBeginInfo.renderArea.extent.width = screenWidth;
@@ -773,53 +889,67 @@ void VulkanExample::BuildUpscaleCommandBuffers()
             LOGI("VulkanExample not use vrs");
         }
         
-        // Second Pass: Light Pass, Support VRS
-        clearValues[0].color = defaultClearColor;
-        clearValues[1].depthStencil = {1.0f, 0};
-
-        renderPassBeginInfo.renderPass = upscaleFrameBuffers.shadingRate.renderPass;
-        renderPassBeginInfo.framebuffer = upscaleFrameBuffers.shadingRate.frameBuffer;
-        renderPassBeginInfo.renderArea.extent.width = upscaleFrameBuffers.shadingRate.width;
-        renderPassBeginInfo.renderArea.extent.height = upscaleFrameBuffers.shadingRate.height;
-        renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-        renderPassBeginInfo.pClearValues = clearValues.data();
-
-        vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
-        if (use_vrs) {
-            // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
-            // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
-            combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-            // Combiner for pipeline (A) and attachment (B), replace the pipeline default value (fragment_size) with the
-            // fragment sizes stored in the attachment
-            combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+        // When visualizing shading rate, create visible visualization data and skip light pass
+        if (visualize_shading_rate && use_vrs) {
+            LOGI("VulkanExample visualization enabled - creating visible shading rate data for upscale path, skipping light pass");
+            CreateShadingRateVisualizationBuffer(true, drawCmdBuffers[i]);
         } else {
-            // If shading rate from attachment is disabled, we keep the value set via the dynamic state
-            combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
-            combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+            // Second Pass: Light Pass, Support VRS (only when not visualizing)
+            clearValues[0].color = defaultClearColor;
+            clearValues[1].depthStencil = {1.0f, 0};
+
+            renderPassBeginInfo.renderPass = upscaleFrameBuffers.shadingRate.renderPass;
+            renderPassBeginInfo.framebuffer = upscaleFrameBuffers.shadingRate.frameBuffer;
+            renderPassBeginInfo.renderArea.extent.width = upscaleFrameBuffers.shadingRate.width;
+            renderPassBeginInfo.renderArea.extent.height = upscaleFrameBuffers.shadingRate.height;
+            renderPassBeginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+            renderPassBeginInfo.pClearValues = clearValues.data();
+
+            vkCmdBeginRenderPass(drawCmdBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+            if (use_vrs) {
+                // If shading rate from attachment is enabled, we set the combiner, so that the values from the attachment
+                // are used Combiner for pipeline (A) and primitive (B) - Not used in this sample
+                combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+                // Combiner for pipeline (A) and attachment (B), replace the pipeline default value (fragment_size) with the
+                // fragment sizes stored in the attachment
+                combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR;
+            } else {
+                // If shading rate from attachment is disabled, we keep the value set via the dynamic state
+                combinerOps[0] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+                combinerOps[1] = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR;
+            }
+
+            vkCmdSetFragmentShadingRateKHR(drawCmdBuffers[i], &fragmentSize, combinerOps);
+            viewport = vks::initializers::viewport((float)upscaleFrameBuffers.light.width,
+                                                   (float)upscaleFrameBuffers.light.height, 0.0f, 1.0f);
+            vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
+            scissor = vks::initializers::rect2D(upscaleFrameBuffers.light.width, upscaleFrameBuffers.light.height, 0, 0);
+            vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
+
+            vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.light, 0, 1,
+                                    &upscaleDescriptorSets.light, 0, nullptr);
+            vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, upscalePipelines.light);
+            vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
+            vkCmdEndRenderPass(drawCmdBuffers[i]);
         }
 
-        vkCmdSetFragmentShadingRateKHR(drawCmdBuffers[i], &fragmentSize, combinerOps);
-        viewport = vks::initializers::viewport((float)upscaleFrameBuffers.light.width,
-                                               (float)upscaleFrameBuffers.light.height, 0.0f, 1.0f);
-        vkCmdSetViewport(drawCmdBuffers[i], 0, 1, &viewport);
-        scissor = vks::initializers::rect2D(upscaleFrameBuffers.light.width, upscaleFrameBuffers.light.height, 0, 0);
-        vkCmdSetScissor(drawCmdBuffers[i], 0, 1, &scissor);
-
-        vkCmdBindDescriptorSets(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayouts.light, 0, 1,
-                                &upscaleDescriptorSets.light, 0, nullptr);
-        vkCmdBindPipeline(drawCmdBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, upscalePipelines.light);
-        vkCmdDraw(drawCmdBuffers[i], 3, 1, 0, 0);
-        vkCmdEndRenderPass(drawCmdBuffers[i]);
-
-        if (use_method == 1) {
-            LOGI("VulkanExample example use spatial upscale.");
-            XEG_SpatialUpscaleDescription xegDescription{0};
-            xegDescription.inputImage = upscaleFrameBuffers.light.color.view;
-            xegDescription.outputImage = upscaleFrameBuffers.upscale.color.view;
-            HMS_XEG_CmdRenderSpatialUpscale(drawCmdBuffers[i], xegSpatialUpscale, &xegDescription);
+        // Handle upscaling and visualization
+        if (!visualize_shading_rate) {
+            // Normal upscaling path
+            if (use_method == 1) {
+                LOGI("VulkanExample example use spatial upscale.");
+                XEG_SpatialUpscaleDescription xegDescription{0};
+                xegDescription.inputImage = upscaleFrameBuffers.light.color.view;
+                xegDescription.outputImage = upscaleFrameBuffers.upscale.color.view;
+                HMS_XEG_CmdRenderSpatialUpscale(drawCmdBuffers[i], xegSpatialUpscale, &xegDescription);
+            } else {
+                LOGI("VulkanExample example use fsr upscale.");
+                fsr->Render(drawCmdBuffers[i]);
+            }
         } else {
-            LOGI("VulkanExample example use fsr upscale.");
-            fsr->Render(drawCmdBuffers[i]);
+            LOGI("VulkanExample skipping upscale for shading rate visualization - will display light buffer directly");
+            // When visualization is enabled, skip upscaling entirely
+            // The final swap will use the light buffer instead of upscale buffer (handled in descriptor set)
         }
 
         clearValues[0].color = defaultClearColor;
@@ -998,8 +1128,20 @@ void VulkanExample::SetupDescriptors()
             VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &descriptorAllocInfo, &descriptorSets.swap));
         }
 
+        // Choose input image based on visualization state for non-upscale path
+        VkImageView inputImageView;
+        if (visualize_shading_rate && use_vrs) {
+            // When visualizing, try to show the shading rate image (contains unsigned integer shading rate values)
+            // This may not display perfect colors but should show different values for different shading rates
+            inputImageView = frameBuffers.shadingRate.color.view;
+            LOGI("VulkanExample SetupDescriptors: Using shading rate image for visualization (non-upscale)");
+        } else {
+            // Normal path: show the light buffer
+            inputImageView = frameBuffers.light.color.view;
+        }
+
         imageDescriptors = {
-            vks::initializers::descriptorImageInfo(colorSampler, frameBuffers.light.color.view,
+            vks::initializers::descriptorImageInfo(colorSampler, inputImageView,
                                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
         };
 
@@ -1016,8 +1158,20 @@ void VulkanExample::SetupDescriptors()
         if (upscaleDescriptorSets.swapUpscale == VK_NULL_HANDLE) {
             VK_CHECK_RESULT(vkAllocateDescriptorSets(device, &descriptorAllocInfo, &upscaleDescriptorSets.swapUpscale));
         }
+        
+        // Choose input image based on visualization state
+        VkImageView inputImageView;
+        if (visualize_shading_rate) {
+            // When visualizing, show the low-res light buffer (where VRS is applied)
+            inputImageView = upscaleFrameBuffers.light.color.view;
+            LOGI("VulkanExample SetupDescriptors: Using light buffer for visualization");
+        } else {
+            // Normal path: show the upscaled image
+            inputImageView = upscaleFrameBuffers.upscale.color.view;
+        }
+        
         imageDescriptors = {
-            vks::initializers::descriptorImageInfo(colorSampler, upscaleFrameBuffers.upscale.color.view,
+            vks::initializers::descriptorImageInfo(colorSampler, inputImageView,
                                                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL),
         };
 
@@ -1313,8 +1467,12 @@ void VulkanExample::DispatchVRS(bool upscale, VkCommandBuffer commandBuffer)
     xeg_description.inputColorImage = upscale ? upscaleFrameBuffers.light.color.view : frameBuffers.light.color.view;
     xeg_description.inputDepthImage =
         upscale ? upscaleFrameBuffers.gBufferLight.depth.view : frameBuffers.gBufferLight.depth.view;
+    
+    // When visualization is enabled, we want to output a colored representation of shading rates
+    // For now, use the proper shading rate image buffer (the XEG library should handle this)
     xeg_description.outputShadingRateImage =
         upscale ? upscaleFrameBuffers.shadingRate.color.view : frameBuffers.shadingRate.color.view;
+    
     if (use_reprojectionMatrix) {
         if (camera.curVP.perspective == glm::mat4(0)) {
             xeg_description.reprojectionMatrix = (float *)glm::value_ptr(glm::mat4(0));

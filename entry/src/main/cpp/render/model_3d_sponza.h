@@ -56,6 +56,8 @@ public:
     bool use_vrs = false;
     bool cur_vrs = false;
     bool use_reprojectionMatrix = true;
+    bool visualize_shading_rate = false;
+    bool cur_visualize_shading_rate = false;
     
     void UseVRS(bool useVRS)
     {
@@ -67,6 +69,12 @@ public:
     {
         use_method = method;
         LOGI("VulkanExample curr set method: %{public}d", use_method);
+    }
+    
+    void SetVisualizeShadingRate(bool visualize)
+    {
+        visualize_shading_rate = visualize;
+        LOGI("VulkanExample curr set visualize shading rate: %{public}d", visualize_shading_rate);
     }
 
     FSR *fsr;
@@ -249,16 +257,23 @@ public:
         if (!prepared) {
             return;
         }
-        if (cur_method != use_method || cur_vrs != use_vrs) {
+        if (cur_method != use_method || cur_vrs != use_vrs || cur_visualize_shading_rate != visualize_shading_rate) {
+            SetupDescriptors();  // Update descriptor sets first to reflect new image bindings
             buildCommandBuffers();
-            LOGI("VulkanExample rebuild command buffers");
+            LOGI("VulkanExample rebuild command buffers and descriptor sets");
             cur_method = use_method;
             cur_vrs = use_vrs;
+            cur_visualize_shading_rate = visualize_shading_rate;
         }
 
         Draw();
         if (camera.updated) {
             UpdateUniformBufferMatrices();
+            // When visualizing shading rate, rebuild command buffers to update the scene with new camera view
+            if (visualize_shading_rate && use_vrs) {
+                buildCommandBuffers();
+                LOGI("VulkanExample rebuild command buffers for shading rate visualization with camera update");
+            }
         }
     }
 
@@ -277,6 +292,7 @@ private:
     void InitXEGVRS();
     void DispatchVRS(bool upscale, VkCommandBuffer commandBuffer);
     void PrepareShadingRateImage(uint32_t sriWidth, uint32_t sriHeight, FrameBufferAttachment *attachment);
+    void CreateShadingRateVisualizationBuffer(bool upscale, VkCommandBuffer commandBuffer);
     void CreateAttachment(VkFormat format, VkImageUsageFlagBits usage,
         FrameBufferAttachment *attachment, uint32_t width, uint32_t height);
     void PrepareOffscreenFramebuffers();

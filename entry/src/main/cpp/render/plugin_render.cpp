@@ -200,6 +200,52 @@ napi_value PluginRender::SetVRSUsed(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value PluginRender::SetShadingRateVisualization(napi_env env, napi_callback_info info)
+{
+    size_t argc = 1;
+    napi_value args[1] = {nullptr};
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
+    bool visualize;
+    napi_get_value_bool(env, args[0], &visualize);
+    LOGI("PluginRender::SetShadingRateVisualization get params is %{public}d", visualize);
+
+    if ((nullptr == env) || (nullptr == info)) {
+        LOGE("PluginRender SetShadingRateVisualization : env or info is null");
+        return nullptr;
+    }
+
+    napi_value thisArg;
+    if (napi_ok != napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, nullptr)) {
+        LOGE("PluginRender SetShadingRateVisualization : napi_get_cb_info fail");
+        return nullptr;
+    }
+
+    napi_value exportInstance;
+    if (napi_ok != napi_get_named_property(env, thisArg, OH_NATIVE_XCOMPONENT_OBJ, &exportInstance)) {
+        LOGE("PluginRender SetShadingRateVisualization : napi_get_named_property fail");
+        return nullptr;
+    }
+
+    OH_NativeXComponent *nativeXComponent = nullptr;
+    if (napi_ok != napi_unwrap(env, exportInstance, reinterpret_cast<void **>(&nativeXComponent))) {
+        LOGE("PluginRender SetShadingRateVisualization : napi_unwrap fail");
+        return nullptr;
+    }
+
+    char idStr[OH_XCOMPONENT_ID_LEN_MAX + 1] = {'\0'};
+    uint64_t idSize = OH_XCOMPONENT_ID_LEN_MAX + 1;
+    if (OH_NATIVEXCOMPONENT_RESULT_SUCCESS != OH_NativeXComponent_GetXComponentId(nativeXComponent, idStr, &idSize)) {
+        LOGE("PluginRender SetShadingRateVisualization : Unable to get XComponent id");
+        return nullptr;
+    }
+    std::string id(idStr);
+    PluginRender *render = PluginRender::GetInstance(id);
+    if (render) {
+        render->m_vulkanexample->SetVisualizeShadingRate(visualize);
+    }
+    return nullptr;
+}
+
 PluginRender::PluginRender(std::string &id)
 {
     this->m_id = id;
@@ -231,7 +277,8 @@ void PluginRender::Export(napi_env env, napi_value exports)
 
     napi_property_descriptor desc[] = {
         {"setUpscaleMethod", nullptr, PluginRender::SetUpscaleMethod, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"setVRSUsed", nullptr, PluginRender::SetVRSUsed, nullptr, nullptr, nullptr, napi_default, nullptr}};
+        {"setVRSUsed", nullptr, PluginRender::SetVRSUsed, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"setShadingRateVisualization", nullptr, PluginRender::SetShadingRateVisualization, nullptr, nullptr, nullptr, napi_default, nullptr}};
 
     if (napi_ok != napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc)) {
         LOGE("PluginRender Export: napi_define_properties failed");
