@@ -57,11 +57,21 @@ public:
     bool use_vrs = false;
     bool cur_vrs = false;
     bool use_reprojectionMatrix = true;
+    bool load_shading_image = false;
     
     void UseVRS(bool useVRS)
     {
         use_vrs = useVRS;
         LOGI("VulkanExample curr use vrs: %{public}d", use_vrs);
+    }
+    
+    void SetLoadShadingImage(bool loadShadingImage)
+    {
+        load_shading_image = loadShadingImage;
+        LOGI("VulkanExample set load_shading_image: %{public}d", load_shading_image);
+        if (load_shading_image) {
+            loadShadingRateImage();
+        }
     }
     
     void SetMethod(int method)
