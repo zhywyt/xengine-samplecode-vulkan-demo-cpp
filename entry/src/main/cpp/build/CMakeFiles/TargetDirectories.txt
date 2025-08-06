@@ -1,4 +1,0 @@
-/home/runner/work/xengine-samplecode-vulkan-demo-cpp/xengine-samplecode-vulkan-demo-cpp/entry/src/main/cpp/build/CMakeFiles/nativerender.dir
-/home/runner/work/xengine-samplecode-vulkan-demo-cpp/xengine-samplecode-vulkan-demo-cpp/entry/src/main/cpp/build/CMakeFiles/libktx.dir
-/home/runner/work/xengine-samplecode-vulkan-demo-cpp/xengine-samplecode-vulkan-demo-cpp/entry/src/main/cpp/build/CMakeFiles/edit_cache.dir
-/home/runner/work/xengine-samplecode-vulkan-demo-cpp/xengine-samplecode-vulkan-demo-cpp/entry/src/main/cpp/build/CMakeFiles/rebuild_cache.dir
