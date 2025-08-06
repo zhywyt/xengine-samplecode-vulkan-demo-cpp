@@ -23,6 +23,7 @@
 #include "xengine/xeg_vulkan_spatial_upscale.h"
 #include "xengine/xeg_vulkan_extension.h"
 #include "common/common.h"
+#include "file/file.h"
 
 #define ENABLE_VALIDATION false
 #define VRS_TILE_SIZE 8
@@ -298,5 +299,9 @@ private:
     VkPipelineVertexInputStateCreateInfo m_pipelineVertexInputStateCreateInfo = {};
     VkVertexInputBindingDescription m_vertexInputBindingDescription = {};
     std::vector<VkVertexInputAttributeDescription> m_vertexInputAttributeDescriptions;
+    
+    // Methods for saving and loading shading rate image data
+    void saveShadingRateImage();
+    void loadShadingRateImage();
 };
 #endif // RENDER_MODEL_3D_SPONZA_H

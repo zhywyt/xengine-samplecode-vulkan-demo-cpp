@@ -1,0 +1,2 @@
+/usr/bin/ar qc liblibktx.a CMakeFiles/libktx.dir/3rdParty/ktx/lib/texture.c.o CMakeFiles/libktx.dir/3rdParty/ktx/lib/hashlist.c.o CMakeFiles/libktx.dir/3rdParty/ktx/lib/checkheader.c.o CMakeFiles/libktx.dir/3rdParty/ktx/lib/swap.c.o CMakeFiles/libktx.dir/3rdParty/ktx/lib/memstream.c.o CMakeFiles/libktx.dir/3rdParty/ktx/lib/filestream.c.o
+/usr/bin/ranlib liblibktx.a

@@ -1,0 +1,42 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/nativerender.dir/link.d"
+  "CMakeFiles/nativerender.dir/file/file.cpp.o"
+  "CMakeFiles/nativerender.dir/file/file.cpp.o.d"
+  "CMakeFiles/nativerender.dir/file/file_operator.cpp.o"
+  "CMakeFiles/nativerender.dir/file/file_operator.cpp.o.d"
+  "CMakeFiles/nativerender.dir/manager/plugin_manager.cpp.o"
+  "CMakeFiles/nativerender.dir/manager/plugin_manager.cpp.o.d"
+  "CMakeFiles/nativerender.dir/napi_init.cpp.o"
+  "CMakeFiles/nativerender.dir/napi_init.cpp.o.d"
+  "CMakeFiles/nativerender.dir/render/algorithm/fsr.cpp.o"
+  "CMakeFiles/nativerender.dir/render/algorithm/fsr.cpp.o.d"
+  "CMakeFiles/nativerender.dir/render/model_3d_sponza.cpp.o"
+  "CMakeFiles/nativerender.dir/render/model_3d_sponza.cpp.o.d"
+  "CMakeFiles/nativerender.dir/render/plugin_render.cpp.o"
+  "CMakeFiles/nativerender.dir/render/plugin_render.cpp.o.d"
+  "CMakeFiles/nativerender.dir/render/vulkan_obj_mesh.cpp.o"
+  "CMakeFiles/nativerender.dir/render/vulkan_obj_mesh.cpp.o.d"
+  "CMakeFiles/nativerender.dir/render/vulkan_obj_model.cpp.o"
+  "CMakeFiles/nativerender.dir/render/vulkan_obj_model.cpp.o.d"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanBuffer.cpp.o"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanBuffer.cpp.o.d"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanDevice.cpp.o"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanDevice.cpp.o.d"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanOhos.cpp.o"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanOhos.cpp.o.d"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanSwapChain.cpp.o"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanSwapChain.cpp.o.d"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanTexture.cpp.o"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanTexture.cpp.o.d"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanTools.cpp.o"
+  "CMakeFiles/nativerender.dir/vulkanbase/VulkanTools.cpp.o.d"
+  "CMakeFiles/nativerender.dir/vulkanbase/vulkanexamplebase.cpp.o"
+  "CMakeFiles/nativerender.dir/vulkanbase/vulkanexamplebase.cpp.o.d"
+  "libnativerender.pdb"
+  "libnativerender.so"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/nativerender.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()
