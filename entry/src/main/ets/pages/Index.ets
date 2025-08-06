@@ -75,7 +75,7 @@ struct Index {
               console.info('Select:' + index)
               this.xComponentContext.setUpscaleMethod(index);
             })
-        }.width('50%')
+        }.width('40%')
 
         Column() {
           Checkbox({name: 'checkbox1',  group: 'checkboxGroup'})
@@ -90,9 +90,25 @@ struct Index {
               console.info('Checkbox1 change is'+ value)
             })
           Text('useVRS')
-        }
+        }.width('30%')
 
-      }.height('10%').width('60%')
+        Column() {
+          Button('Save Shading Rate')
+            .fontSize(14)
+            .fontWeight(500)
+            .fontColor('#FFFFFF')
+            .backgroundColor('#007DFF')
+            .height(30)
+            .borderRadius(5)
+            .onClick(() => {
+              if (this.xComponentContext) {
+                this.xComponentContext.saveShadingRateImage();
+                console.info('Save Shading Rate Image button clicked')
+              }
+            })
+        }.width('30%')
+
+      }.height('10%').width('90%')
 
     }.width('100%').height('100%').align(Alignment.TopStart)
   }
