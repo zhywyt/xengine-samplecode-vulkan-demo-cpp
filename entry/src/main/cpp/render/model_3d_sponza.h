@@ -23,6 +23,7 @@
 #include "xengine/xeg_vulkan_spatial_upscale.h"
 #include "xengine/xeg_vulkan_extension.h"
 #include "common/common.h"
+#include "file/file.h"
 
 #define ENABLE_VALIDATION false
 #define VRS_TILE_SIZE 8
@@ -56,11 +57,21 @@ public:
     bool use_vrs = false;
     bool cur_vrs = false;
     bool use_reprojectionMatrix = true;
+    bool load_shading_image = false;
     
     void UseVRS(bool useVRS)
     {
         use_vrs = useVRS;
         LOGI("VulkanExample curr use vrs: %{public}d", use_vrs);
+    }
+    
+    void SetLoadShadingImage(bool loadShadingImage)
+    {
+        load_shading_image = loadShadingImage;
+        LOGI("VulkanExample set load_shading_image: %{public}d", load_shading_image);
+        if (load_shading_image) {
+            loadShadingRateImage();
+        }
     }
     
     void SetMethod(int method)
@@ -298,5 +309,9 @@ private:
     VkPipelineVertexInputStateCreateInfo m_pipelineVertexInputStateCreateInfo = {};
     VkVertexInputBindingDescription m_vertexInputBindingDescription = {};
     std::vector<VkVertexInputAttributeDescription> m_vertexInputAttributeDescriptions;
+    
+    // Methods for saving and loading shading rate image data
+    void saveShadingRateImage();
+    void loadShadingRateImage();
 };
 #endif // RENDER_MODEL_3D_SPONZA_H
