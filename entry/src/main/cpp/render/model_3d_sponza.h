@@ -313,5 +313,10 @@ private:
     // Methods for saving and loading shading rate image data
     void saveShadingRateImage();
     void loadShadingRateImage();
+    
+    // Methods for 2x2 shading rate functionality
+    void generate2x2ShadingRate();
+    void save2x2ShadingRate();
+    void load2x2ShadingRate();
 };
 #endif // RENDER_MODEL_3D_SPONZA_H

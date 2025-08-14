@@ -287,6 +287,88 @@ napi_value PluginRender::SetLoadShadingImage(napi_env env, napi_callback_info in
     return nullptr;
 }
 
+napi_value PluginRender::Save2x2ShadingRate(napi_env env, napi_callback_info info)
+{
+    LOGI("PluginRender::Save2x2ShadingRate called");
+
+    if ((nullptr == env) || (nullptr == info)) {
+        LOGE("PluginRender Save2x2ShadingRate : env or info is null");
+        return nullptr;
+    }
+
+    napi_value thisArg;
+    if (napi_ok != napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, nullptr)) {
+        LOGE("PluginRender Save2x2ShadingRate : napi_get_cb_info fail");
+        return nullptr;
+    }
+
+    napi_value exportInstance;
+    if (napi_ok != napi_get_named_property(env, thisArg, OH_NATIVE_XCOMPONENT_OBJ, &exportInstance)) {
+        LOGE("PluginRender Save2x2ShadingRate : napi_get_named_property fail");
+        return nullptr;
+    }
+
+    OH_NativeXComponent *nativeXComponent = nullptr;
+    if (napi_ok != napi_unwrap(env, exportInstance, reinterpret_cast<void **>(&nativeXComponent))) {
+        LOGE("PluginRender Save2x2ShadingRate : napi_unwrap fail");
+        return nullptr;
+    }
+
+    char idStr[OH_XCOMPONENT_ID_LEN_MAX + 1] = {'\0'};
+    uint64_t idSize = OH_XCOMPONENT_ID_LEN_MAX + 1;
+    if (OH_NATIVEXCOMPONENT_RESULT_SUCCESS != OH_NativeXComponent_GetXComponentId(nativeXComponent, idStr, &idSize)) {
+        LOGE("PluginRender Save2x2ShadingRate : Unable to get XComponent id");
+        return nullptr;
+    }
+    std::string id(idStr);
+    PluginRender *render = PluginRender::GetInstance(id);
+    if (render && render->m_vulkanexample) {
+        render->m_vulkanexample->save2x2ShadingRate();
+    }
+    return nullptr;
+}
+
+napi_value PluginRender::Load2x2ShadingRate(napi_env env, napi_callback_info info)
+{
+    LOGI("PluginRender::Load2x2ShadingRate called");
+
+    if ((nullptr == env) || (nullptr == info)) {
+        LOGE("PluginRender Load2x2ShadingRate : env or info is null");
+        return nullptr;
+    }
+
+    napi_value thisArg;
+    if (napi_ok != napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, nullptr)) {
+        LOGE("PluginRender Load2x2ShadingRate : napi_get_cb_info fail");
+        return nullptr;
+    }
+
+    napi_value exportInstance;
+    if (napi_ok != napi_get_named_property(env, thisArg, OH_NATIVE_XCOMPONENT_OBJ, &exportInstance)) {
+        LOGE("PluginRender Load2x2ShadingRate : napi_get_named_property fail");
+        return nullptr;
+    }
+
+    OH_NativeXComponent *nativeXComponent = nullptr;
+    if (napi_ok != napi_unwrap(env, exportInstance, reinterpret_cast<void **>(&nativeXComponent))) {
+        LOGE("PluginRender Load2x2ShadingRate : napi_unwrap fail");
+        return nullptr;
+    }
+
+    char idStr[OH_XCOMPONENT_ID_LEN_MAX + 1] = {'\0'};
+    uint64_t idSize = OH_XCOMPONENT_ID_LEN_MAX + 1;
+    if (OH_NATIVEXCOMPONENT_RESULT_SUCCESS != OH_NativeXComponent_GetXComponentId(nativeXComponent, idStr, &idSize)) {
+        LOGE("PluginRender Load2x2ShadingRate : Unable to get XComponent id");
+        return nullptr;
+    }
+    std::string id(idStr);
+    PluginRender *render = PluginRender::GetInstance(id);
+    if (render && render->m_vulkanexample) {
+        render->m_vulkanexample->load2x2ShadingRate();
+    }
+    return nullptr;
+}
+
 PluginRender::PluginRender(std::string &id)
 {
     this->m_id = id;
@@ -320,7 +402,9 @@ void PluginRender::Export(napi_env env, napi_value exports)
         {"setUpscaleMethod", nullptr, PluginRender::SetUpscaleMethod, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"setVRSUsed", nullptr, PluginRender::SetVRSUsed, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"saveShadingRateImage", nullptr, PluginRender::SaveShadingRateImage, nullptr, nullptr, nullptr, napi_default, nullptr},
-        {"setLoadShadingImage", nullptr, PluginRender::SetLoadShadingImage, nullptr, nullptr, nullptr, napi_default, nullptr}};
+        {"setLoadShadingImage", nullptr, PluginRender::SetLoadShadingImage, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"save2x2ShadingRate", nullptr, PluginRender::Save2x2ShadingRate, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"load2x2ShadingRate", nullptr, PluginRender::Load2x2ShadingRate, nullptr, nullptr, nullptr, napi_default, nullptr}};
 
     if (napi_ok != napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc)) {
         LOGE("PluginRender Export: napi_define_properties failed");

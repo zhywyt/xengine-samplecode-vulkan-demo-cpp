@@ -126,6 +126,41 @@ struct Index {
 
       }.height('10%').width('90%')
 
+      Row() {
+        Column() {
+          Button('Generate & Save 2x2')
+            .fontSize(12)
+            .fontWeight(500)
+            .fontColor('#FFFFFF')
+            .backgroundColor('#FF6347')
+            .height(30)
+            .borderRadius(5)
+            .onClick(() => {
+              if (this.xComponentContext) {
+                this.xComponentContext.save2x2ShadingRate();
+                console.info('Generate & Save 2x2 Shading Rate button clicked')
+              }
+            })
+        }.width('50%')
+
+        Column() {
+          Button('Load 2x2 Shading Rate')
+            .fontSize(12)
+            .fontWeight(500)
+            .fontColor('#FFFFFF')
+            .backgroundColor('#4682B4')
+            .height(30)
+            .borderRadius(5)
+            .onClick(() => {
+              if (this.xComponentContext) {
+                this.xComponentContext.load2x2ShadingRate();
+                console.info('Load 2x2 Shading Rate button clicked')
+              }
+            })
+        }.width('50%')
+
+      }.height('10%').width('90%')
+
     }.width('100%').height('100%').align(Alignment.TopStart)
   }
 }

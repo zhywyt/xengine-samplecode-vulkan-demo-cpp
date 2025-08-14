@@ -33,6 +33,8 @@ public:
     static napi_value SetVRSUsed(napi_env env, napi_callback_info info);
     static napi_value SaveShadingRateImage(napi_env env, napi_callback_info info);
     static napi_value SetLoadShadingImage(napi_env env, napi_callback_info info);
+    static napi_value Save2x2ShadingRate(napi_env env, napi_callback_info info);
+    static napi_value Load2x2ShadingRate(napi_env env, napi_callback_info info);
     static std::unordered_map<std::string, PluginRender *> m_instance;
     static OH_NativeXComponent_Callback m_callback;
     static std::mutex m_mutex;
