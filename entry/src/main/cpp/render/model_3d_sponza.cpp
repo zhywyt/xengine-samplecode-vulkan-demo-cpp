@@ -1567,3 +1567,196 @@ void VulkanExample::loadShadingRateImage()
     
     LOGI("VulkanExample loadShadingRateImage: Successfully loaded shading rate image");
 }
+
+void VulkanExample::generate2x2ShadingRate()
+{
+    LOGI("VulkanExample generate2x2ShadingRate: Generating 2x2 shading rate pattern");
+    
+    // Only proceed if VRS is enabled and the image exists
+    if (!use_vrs || frameBuffers.shadingRate.color.image == VK_NULL_HANDLE) {
+        LOGI("VulkanExample generate2x2ShadingRate: VRS not enabled or image not available, skipping generation");
+        return;
+    }
+    
+    // Get image info
+    VkImageSubresource subResource = {};
+    subResource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subResource.mipLevel = 0;
+    subResource.arrayLayer = 0;
+    
+    VkSubresourceLayout subResourceLayout;
+    vkGetImageSubresourceLayout(device, frameBuffers.shadingRate.color.image, &subResource, &subResourceLayout);
+    
+    // Map the image memory
+    void* data = nullptr;
+    VkResult result = vkMapMemory(device, frameBuffers.shadingRate.color.mem, 0, VK_WHOLE_SIZE, 0, &data);
+    if (result != VK_SUCCESS) {
+        LOGE("VulkanExample generate2x2ShadingRate: Failed to map memory, result: %{public}d", result);
+        return;
+    }
+    
+    // Fill the entire shading rate image with 2x2 shading rate
+    // VK_FRAGMENT_SHADING_RATE_2X2_BIT_KHR = 5 (0x5)
+    uint8_t* imageData = (uint8_t*)data + subResourceLayout.offset;
+    uint32_t imageSize = frameBuffers.shadingRate.width * frameBuffers.shadingRate.height;
+    
+    for (uint32_t i = 0; i < imageSize; i++) {
+        imageData[i] = 0x5; // 2x2 shading rate
+    }
+    
+    vkUnmapMemory(device, frameBuffers.shadingRate.color.mem);
+    
+    LOGI("VulkanExample generate2x2ShadingRate: Successfully generated 2x2 shading rate pattern");
+}
+
+void VulkanExample::save2x2ShadingRate()
+{
+    LOGI("VulkanExample save2x2ShadingRate: Generating and saving 2x2 shading rate image");
+    
+    // First generate the 2x2 pattern
+    generate2x2ShadingRate();
+    
+    // Only proceed if VRS is enabled and the image exists
+    if (!use_vrs || frameBuffers.shadingRate.color.image == VK_NULL_HANDLE) {
+        LOGI("VulkanExample save2x2ShadingRate: VRS not enabled or image not available, skipping save");
+        return;
+    }
+    
+    // Get image info
+    VkImageSubresource subResource = {};
+    subResource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subResource.mipLevel = 0;
+    subResource.arrayLayer = 0;
+    
+    VkSubresourceLayout subResourceLayout;
+    vkGetImageSubresourceLayout(device, frameBuffers.shadingRate.color.image, &subResource, &subResourceLayout);
+    
+    // Map the image memory
+    void* data = nullptr;
+    VkResult result = vkMapMemory(device, frameBuffers.shadingRate.color.mem, 0, VK_WHOLE_SIZE, 0, &data);
+    if (result != VK_SUCCESS) {
+        LOGE("VulkanExample save2x2ShadingRate: Failed to map memory, result: %{public}d", result);
+        return;
+    }
+    
+    // Create file for saving
+    File file;
+    std::string filePath = "/data/storage/el2/base/haps/entry/cache/shading_rate_2x2.dat";
+    if (!file.Open(filePath, File::FILE_CREATE)) {
+        LOGE("VulkanExample save2x2ShadingRate: Failed to create file: %{public}s", filePath.c_str());
+        vkUnmapMemory(device, frameBuffers.shadingRate.color.mem);
+        return;
+    }
+    
+    // Write image metadata
+    uint32_t width = frameBuffers.shadingRate.width;
+    uint32_t height = frameBuffers.shadingRate.height;
+    VkFormat format = frameBuffers.shadingRate.color.format;
+    
+    if (file.Write(&width, sizeof(uint32_t)) != sizeof(uint32_t) ||
+        file.Write(&height, sizeof(uint32_t)) != sizeof(uint32_t) ||
+        file.Write(&format, sizeof(VkFormat)) != sizeof(VkFormat) ||
+        file.Write(&subResourceLayout.size, sizeof(VkDeviceSize)) != sizeof(VkDeviceSize)) {
+        LOGE("VulkanExample save2x2ShadingRate: Failed to write metadata");
+        file.Close();
+        vkUnmapMemory(device, frameBuffers.shadingRate.color.mem);
+        return;
+    }
+    
+    // Write image data
+    char* imageData = (char*)data + subResourceLayout.offset;
+    if (file.Write(imageData, subResourceLayout.size) != subResourceLayout.size) {
+        LOGE("VulkanExample save2x2ShadingRate: Failed to write image data");
+    } else {
+        LOGI("VulkanExample save2x2ShadingRate: Successfully saved %{public}llu bytes", subResourceLayout.size);
+    }
+    
+    file.Close();
+    vkUnmapMemory(device, frameBuffers.shadingRate.color.mem);
+    
+    LOGI("VulkanExample save2x2ShadingRate: Successfully saved 2x2 shading rate image");
+}
+
+void VulkanExample::load2x2ShadingRate()
+{
+    LOGI("VulkanExample load2x2ShadingRate: Loading 2x2 shading rate image from file");
+    
+    std::string filePath = "/data/storage/el2/base/haps/entry/cache/shading_rate_2x2.dat";
+    if (!File::IsFileExist(filePath)) {
+        LOGI("VulkanExample load2x2ShadingRate: File does not exist, skipping load");
+        return;
+    }
+    
+    // Only proceed if the image exists
+    if (frameBuffers.shadingRate.color.image == VK_NULL_HANDLE) {
+        LOGI("VulkanExample load2x2ShadingRate: Shading rate image not created yet, skipping load");
+        return;
+    }
+    
+    File file;
+    if (!file.Open(filePath, File::FILE_READ)) {
+        LOGE("VulkanExample load2x2ShadingRate: Failed to open file: %{public}s", filePath.c_str());
+        return;
+    }
+    
+    // Read metadata
+    uint32_t savedWidth, savedHeight;
+    VkFormat savedFormat;
+    VkDeviceSize savedSize;
+    
+    if (file.Read(&savedWidth, sizeof(uint32_t)) != sizeof(uint32_t) ||
+        file.Read(&savedHeight, sizeof(uint32_t)) != sizeof(uint32_t) ||
+        file.Read(&savedFormat, sizeof(VkFormat)) != sizeof(VkFormat) ||
+        file.Read(&savedSize, sizeof(VkDeviceSize)) != sizeof(VkDeviceSize)) {
+        LOGE("VulkanExample load2x2ShadingRate: Failed to read metadata");
+        file.Close();
+        return;
+    }
+    
+    // Verify compatibility
+    if (savedWidth != frameBuffers.shadingRate.width || 
+        savedHeight != frameBuffers.shadingRate.height ||
+        savedFormat != frameBuffers.shadingRate.color.format) {
+        LOGE("VulkanExample load2x2ShadingRate: Image format mismatch - saved: %{public}dx%{public}d fmt:%{public}d, current: %{public}dx%{public}d fmt:%{public}d", 
+             savedWidth, savedHeight, savedFormat, frameBuffers.shadingRate.width, frameBuffers.shadingRate.height, frameBuffers.shadingRate.color.format);
+        file.Close();
+        return;
+    }
+    
+    // Get current image layout info
+    VkImageSubresource subResource = {};
+    subResource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    subResource.mipLevel = 0;
+    subResource.arrayLayer = 0;
+    
+    VkSubresourceLayout subResourceLayout;
+    vkGetImageSubresourceLayout(device, frameBuffers.shadingRate.color.image, &subResource, &subResourceLayout);
+    
+    if (savedSize != subResourceLayout.size) {
+        LOGE("VulkanExample load2x2ShadingRate: Size mismatch - saved: %{public}llu, current: %{public}llu", savedSize, subResourceLayout.size);
+        file.Close();
+        return;
+    }
+    
+    // Map current image memory
+    void* data = nullptr;
+    VkResult result = vkMapMemory(device, frameBuffers.shadingRate.color.mem, 0, VK_WHOLE_SIZE, 0, &data);
+    if (result != VK_SUCCESS) {
+        LOGE("VulkanExample load2x2ShadingRate: Failed to map memory, result: %{public}d", result);
+        file.Close();
+        return;
+    }
+    
+    // Read image data
+    char* imageData = (char*)data + subResourceLayout.offset;
+    if (file.Read(imageData, savedSize) != savedSize) {
+        LOGE("VulkanExample load2x2ShadingRate: Failed to read image data");
+    } else {
+        LOGI("VulkanExample load2x2ShadingRate: Successfully loaded %{public}llu bytes", savedSize);
+    }
+    
+    file.Close();
+    vkUnmapMemory(device, frameBuffers.shadingRate.color.mem);
+    
+    LOGI("VulkanExample load2x2ShadingRate: Successfully loaded 2x2 shading rate image");
+}
